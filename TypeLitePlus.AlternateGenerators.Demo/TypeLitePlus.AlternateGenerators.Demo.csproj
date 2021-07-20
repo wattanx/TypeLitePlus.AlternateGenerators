@@ -106,7 +106,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="Scripts\Enums.ts">
+    <TypeScriptCompile Include="Scripts\Output.ts">
       <DependentUpon>TypeLite.tt</DependentUpon>
     </TypeScriptCompile>
     <TypeScriptCompile Include="Scripts\TypeLite.d.ts">

@@ -2,22 +2,20 @@
 <#@ assembly name="netstandard.dll" #>
 <#@ assembly name="$(TargetDir)TypeLitePlus.Core.dll" #>
 <#@ assembly name="$(TargetDir)TypeLitePlus.AlternateGenerators.dll" #>
-<#@ assembly name="$(TargetDir)TypeLitePlus.AlternateGenerators.Demo.dll" #>
+<#@ assembly name="$(TargetDir)TypeLitePlus.AlternateGenerators.TestModels.dll" #>
 
 <#@ import namespace="TypeLitePlus" #>
 <#@ import namespace="TypeLitePlus.AlternateGenerators" #>
-<#@ import namespace="TypeLitePlus.AlternateGenerators.Demo.TestModels" #>
+<#@ import namespace="TypeLitePlus.AlternateGenerators.TestModels" #>
 <#@output extension=".d.ts"#>
 
 <#@include file="Manager.ttinclude"#>
 <# var manager = EntityFrameworkTemplateFileManager.Create(this); #>
 
-<# var ts = TypeScript.Definitions(new TsWithoutNamespaceGenerator()).AsConstEnums(false).For<Employee>(); #>
+<# var ts = TypeScript.Definitions(new TsWithoutNamespaceGenerator()).AsConstEnums(false).For<Item>(); #>
 
+<# manager.StartNewFile("Output.ts"); #>
 <#= ts.Generate() #>
-
-<# manager.StartNewFile("Enums.ts"); #>
-<#= ts.Generate(TsGeneratorOutput.Enums) #>
 <#
 manager.EndBlock();
 manager.Process(true);
