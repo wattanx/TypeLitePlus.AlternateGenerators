@@ -1,10 +1,18 @@
-# TypeLite Plus WithoutNamespace Extention
+# TypeLite Plus AlternateGenerators
 
 TypeLite Plus is the utility that generates TypeScript definitions from .NET classes.
 
 It's especially useful to keep your TypeScript classes on the client in sync with your POCO classes on the server.
 
-This extension allows for output without namespace.
+This library provides an AlternateGenerator that inherits from `TsGenerator`
+
+## AlternateGenerators
+
+This library provides the following functions.
+
+- Output Without Namespace
+
+  The `TsWithoutNamespaceGenerator` allows output without namsepace.
 
 ## Usage
 
