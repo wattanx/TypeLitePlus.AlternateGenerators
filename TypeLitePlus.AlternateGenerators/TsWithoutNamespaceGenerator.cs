@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using TypeLitePlus;
 using TypeLitePlus.TsModels;
 
@@ -8,22 +9,27 @@ namespace TypeLitePlus.AlternateGenerators
 {
     public class TsWithoutNamespaceGenerator : TsGenerator
     {
-        internal TypeConvertorCollection _typeConvertors;
-
-        public TsWithoutNamespaceGenerator()
-        {
-            _typeConvertors = new TypeConvertorCollection();
-        }
         protected override void AppendModule(TsModule module, ScriptBuilder sb, TsGeneratorOutput generatorOutput)
-        {
-            var classes = module.Classes.Where(c => !_typeConvertors.IsConvertorRegistered(c.Type) && !c.IsIgnored).OrderBy(c => GetTypeName(c)).ToList();
+        {   
+            var classes = module.Classes.Where(c => !InvokeConverterRegisterd(c.Type) && !c.IsIgnored).OrderBy(c => GetTypeName(c)).ToList();
             var baseClasses = classes
                 .Where(c => c.BaseType != null)
                 .Select(c => c.BaseType.Type.FullName)
                 .Distinct()
                 .OrderBy(c => c)
                 .ToList();
-            var enums = module.Enums.Where(e => !_typeConvertors.IsConvertorRegistered(e.Type) && !e.IsIgnored).OrderBy(e => GetTypeName(e)).ToList();
+            var enums = module.Enums.Where(e => !InvokeConverterRegisterd(e.Type) && !e.IsIgnored).OrderBy(e => GetTypeName(e)).ToList();
+
+            if ((generatorOutput == TsGeneratorOutput.Enums && enums.Count == 0) ||
+                (generatorOutput == TsGeneratorOutput.Properties && classes.Count == 0) ||
+                (enums.Count == 0 && classes.Count == 0))
+            {
+                return;
+            }
+
+            if (generatorOutput == TsGeneratorOutput.Properties && !classes.Any(c => c.Fields.Any() || c.Properties.Any())) { return; }
+
+            if (generatorOutput == TsGeneratorOutput.Constants && !classes.Any(c => c.Constants.Any())) { return; }
 
             if (IsEnums(generatorOutput))
             {
@@ -113,32 +119,14 @@ namespace TypeLitePlus.AlternateGenerators
             _generatedClasses.Add(classModel);
         }
 
-        private string GetTsTypeName(TsType type)
+        private bool InvokeConverterRegisterd(Type type)
         {
-            var moduleName = string.Empty;
-
-            if (type as TsModuleMember != null && !_typeConvertors.IsConvertorRegistered(type.Type))
-            {
-                var memberType = (TsModuleMember)type;
-                moduleName = memberType.Module != null ? GetModuleName(memberType.Module) : string.Empty;
-            }
-            else if (type as TsCollection != null)
-            {
-                var collectionType = (TsCollection)type;
-                moduleName = GetCollectionModuleName(collectionType, moduleName);
-            }
-
-            if (type.Type.IsGenericParameter)
-            {
-                return this.GetTypeName(type);
-            }
-            if (!string.IsNullOrEmpty(moduleName))
-            {
-                var name = moduleName + "." + this.GetTypeName(type);
-                return name;
-            }
-
-            return GetTypeName(type);
+            // HACK: _typeConvertors is declared internal.
+            // However in this generator, it needs to be used.
+            var typeConvertors = GetType().GetField("_typeConvertors", BindingFlags.NonPublic | BindingFlags.Instance);
+            var obj = typeConvertors.GetValue(this);
+            var method = obj.GetType().GetMethod("IsConvertorRegistered");
+            return (bool)method.Invoke(obj, new object[] { type });
         }
 
         private string GetTsPropertyType(TsProperty property)

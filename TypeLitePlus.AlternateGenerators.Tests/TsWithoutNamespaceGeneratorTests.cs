@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using Xunit;
 using Xunit.Abstractions;
 
-using TypeLitePlus;
 using TypeLitePlus.AlternateGenerators.TestModels;
 
 namespace TypeLitePlus.AlternateGenerators.Tests
@@ -263,9 +262,6 @@ namespace TypeLitePlus.AlternateGenerators.Tests
             Assert.Contains("Id: string", script);
         }
 
-        /// <summary>
-        /// TODO: fix
-        /// </summary>
         [Fact]
         public void WhenConvertorIsRegisteredForGuid_NoStringInterfaceIsDefined()
         {
@@ -273,7 +269,7 @@ namespace TypeLitePlus.AlternateGenerators.Tests
             builder.Add<Address>();
             var model = builder.Build();
 
-            var target = new TsGenerator();
+            var target = new TsWithoutNamespaceGenerator();
             target.RegisterTypeConvertor<Guid>(type => "string");
             var script = target.Generate(model);
             output.WriteLine(script);
