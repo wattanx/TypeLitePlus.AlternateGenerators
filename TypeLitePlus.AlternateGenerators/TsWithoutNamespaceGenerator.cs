@@ -11,14 +11,14 @@ namespace TypeLitePlus.AlternateGenerators
     {
         protected override void AppendModule(TsModule module, ScriptBuilder sb, TsGeneratorOutput generatorOutput)
         {   
-            var classes = module.Classes.Where(c => !InvokeConverterRegisterd(c.Type) && !c.IsIgnored).OrderBy(c => GetTypeName(c)).ToList();
+            var classes = module.Classes.Where(c => !IsConverterRegisterd(c.Type) && !c.IsIgnored).OrderBy(c => GetTypeName(c)).ToList();
             var baseClasses = classes
                 .Where(c => c.BaseType != null)
                 .Select(c => c.BaseType.Type.FullName)
                 .Distinct()
                 .OrderBy(c => c)
                 .ToList();
-            var enums = module.Enums.Where(e => !InvokeConverterRegisterd(e.Type) && !e.IsIgnored).OrderBy(e => GetTypeName(e)).ToList();
+            var enums = module.Enums.Where(e => !IsConverterRegisterd(e.Type) && !e.IsIgnored).OrderBy(e => GetTypeName(e)).ToList();
 
             if ((generatorOutput == TsGeneratorOutput.Enums && enums.Count == 0) ||
                 (generatorOutput == TsGeneratorOutput.Properties && classes.Count == 0) ||
@@ -119,14 +119,13 @@ namespace TypeLitePlus.AlternateGenerators
             _generatedClasses.Add(classModel);
         }
 
-        private bool InvokeConverterRegisterd(Type type)
+        private bool IsConverterRegisterd(Type type)
         {
             // HACK: _typeConvertors is declared internal.
             // However in this generator, it needs to be used.
-            var typeConvertors = GetType().GetField("_typeConvertors", BindingFlags.NonPublic | BindingFlags.Instance);
-            var obj = typeConvertors.GetValue(this);
-            var method = obj.GetType().GetMethod("IsConvertorRegistered");
-            return (bool)method.Invoke(obj, new object[] { type });
+            var typeConvertors = GetType().GetField("_typeConvertors", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
+            var method = typeConvertors.GetType().GetMethod("IsConvertorRegistered");
+            return (bool)method.Invoke(typeConvertors, new object[] { type });
         }
 
         private string GetTsPropertyType(TsProperty property)
