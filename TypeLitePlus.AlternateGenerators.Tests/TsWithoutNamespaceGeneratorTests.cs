@@ -6,6 +6,7 @@ using Xunit;
 using Xunit.Abstractions;
 
 using TypeLitePlus.AlternateGenerators.TestModels;
+using TypeLitePlus.AlternateGenerators.Extensions;
 
 namespace TypeLitePlus.AlternateGenerators.Tests
 {
@@ -371,6 +372,18 @@ namespace TypeLitePlus.AlternateGenerators.Tests
             Assert.DoesNotContain("namespace Foo", ts);
             Assert.Contains("enum MyTestEnum", ts);
         }
+
+        [Fact]
+        public void EnumWithConstAssertion()
+        {
+            var ts = TypeScript.Definitions(new TsWithoutNamespaceGenerator()).EnumAsConstAssertion(true)
+                .For<MyTestEnum>().ToModule("Foo")
+                .Generate();
+            output.WriteLine(ts);
+            Assert.DoesNotContain("namespace Foo", ts);
+            Assert.Contains("const MyTestEnum", ts);
+        }
+
         enum MyTestEnum
         {
             One,

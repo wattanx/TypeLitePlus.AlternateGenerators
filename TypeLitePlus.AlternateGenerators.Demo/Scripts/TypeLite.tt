@@ -6,13 +6,14 @@
 
 <#@ import namespace="TypeLitePlus" #>
 <#@ import namespace="TypeLitePlus.AlternateGenerators" #>
+<#@ import namespace="TypeLitePlus.AlternateGenerators.Extensions" #>
 <#@ import namespace="TypeLitePlus.AlternateGenerators.TestModels" #>
 <#@output extension=".d.ts"#>
 
 <#@include file="Manager.ttinclude"#>
 <# var manager = EntityFrameworkTemplateFileManager.Create(this); #>
 
-<# var ts = TypeScript.Definitions(new TsWithoutNamespaceGenerator()).AsConstEnums(false).For<Item>(); #>
+<# var ts = TypeScript.Definitions(new TsWithoutNamespaceGenerator()).EnumAsConstAssertion(true).For<Item>(); #>
 
 <# manager.StartNewFile("Output.ts"); #>
 <#= ts.Generate() #>

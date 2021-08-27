@@ -9,6 +9,11 @@ namespace TypeLitePlus.AlternateGenerators
 {
     public class TsWithoutNamespaceGenerator : TsGenerator
     {
+        /// <summary>
+        /// enums be generated as "as const"
+        /// </summary>
+        public bool EnumAsConstAssertion { get; set; }
+
         protected override void AppendModule(TsModule module, ScriptBuilder sb, TsGeneratorOutput generatorOutput)
         {   
             var classes = module.Classes.Where(c => !IsConverterRegisterd(c.Type) && !c.IsIgnored).OrderBy(c => GetTypeName(c)).ToList();
@@ -45,10 +50,7 @@ namespace TypeLitePlus.AlternateGenerators
                 {
                     this.AppendClassDefinition(baseClassModel, sb, generatorOutput);
                 }
-            }
 
-            if (IsProperties(generatorOutput) || IsFields(generatorOutput))
-            {
                 foreach (var classModel in classes.Where(c => !baseClasses.Contains(c.Type.FullName)))
                 {
                     this.AppendClassDefinition(classModel, sb, generatorOutput);
@@ -117,6 +119,42 @@ namespace TypeLitePlus.AlternateGenerators
             sb.AppendLineIndented("}");
 
             _generatedClasses.Add(classModel);
+        }
+
+        protected override void AppendEnumDefinition(TsEnum enumModel, ScriptBuilder sb, TsGeneratorOutput output)
+        {
+            if (!EnumAsConstAssertion) { base.AppendEnumDefinition(enumModel, sb, output); }
+
+            string typeName = this.GetTypeName(enumModel);
+            string visibility = (output & TsGeneratorOutput.Enums) == TsGeneratorOutput.Enums || (output & TsGeneratorOutput.Constants) == TsGeneratorOutput.Constants ? "export " : "";
+
+            _docAppender.AppendEnumDoc(sb, enumModel, typeName);
+            
+            sb.AppendLineIndented(string.Format("{0}const {1} = {{", visibility, typeName));
+
+            using (sb.IncreaseIndentation())
+            {
+                int i = 1;
+                foreach (var v in enumModel.Values)
+                {
+                    _docAppender.AppendEnumValueDoc(sb, v);
+                    switch (EnumMode)
+                    {
+                        case TsEnumModes.String:
+                            sb.AppendLineIndented($"{v.Name}: \"{v.Name}\"{(i < enumModel.Values.Count ? "," : "")}");
+                            break;
+                        default:
+                            sb.AppendLineIndented($"{v.Name}: {v.Value}{(i < enumModel.Values.Count ? "," : "")}");
+                            break;
+                    }
+                    i++;
+                }
+            }
+
+            sb.AppendLineIndented("} as const;");
+            sb.AppendLineIndented($"{visibility}type {typeName} = typeof {typeName}[keyof typeof {typeName}];");
+
+            _generatedEnums.Add(enumModel);
         }
 
         private bool IsConverterRegisterd(Type type)
