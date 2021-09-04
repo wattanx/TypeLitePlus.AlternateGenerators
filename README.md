@@ -74,6 +74,7 @@ export interface Item {
 
 <#@ import namespace="TypeLitePlus" #>
 <#@ import namespace="TypeLitePlus.AlternateGenerators" #>
+<#@ import namespace="TypeLitePlus.AlternateGenerators.Extensions" #>
 <#@ import namespace="TypeLitePlus.AlternateGenerators.TestModels" #>
 <#@output extension=".d.ts"#>
 
